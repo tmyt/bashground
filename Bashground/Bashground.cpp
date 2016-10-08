@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "Bashground.h"
+#include "lxssmanager.h"
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -24,7 +25,7 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
-HANDLE LaunchBash();
+HRESULT InitializeLxss(PLX_SESSION** iLxSession, PLX_INSTANCE** iLxInstance);
 void RegisterIcon(HWND hWnd);
 void DestroyIcon(HWND hWnd);
 
@@ -51,11 +52,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_BASHGROUND));
 
 	MSG msg;
-	HANDLE hProcess = LaunchBash();
-	if (!hProcess) {
-		MessageBox(nullptr, _T("failed to launch bash.exe"), nullptr, 0);
+	PLX_SESSION* iLxSession;
+	PLX_INSTANCE* iLxInstance;
+	if (FAILED(InitializeLxss(&iLxSession, &iLxInstance))) {
 		return 1;
 	}
+
 	RegisterIcon(hWnd);
 	dwTaskbarCreated = RegisterWindowMessage(_T("TaskbarCreated "));
 
@@ -70,9 +72,67 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	DestroyIcon(hWnd);
-	TerminateProcess(hProcess, 0);
 
 	return (int)msg.wParam;
+}
+
+HRESULT InitializeLxss(PLX_SESSION** iLxSession, PLX_INSTANCE** iLxInstance) {
+	//
+	// Initialize COM runtime
+	//
+	HRESULT hr = CoInitializeEx(NULL, 0);
+	if (!SUCCEEDED(hr))
+	{
+		MessageBox(nullptr, _T("Failed to initialize COM runtime"), _T("ERROR"), MB_OK);
+		return hr;
+	}
+
+	//
+	// Setup QoS for the ALPC/RPC endpoint
+	//
+	hr = CoInitializeSecurity(NULL,
+		-1,
+		NULL,
+		NULL,
+		RPC_C_AUTHN_LEVEL_DEFAULT,
+		SecurityDelegation,
+		NULL,
+		EOAC_STATIC_CLOAKING,
+		NULL);
+	if (!SUCCEEDED(hr))
+	{
+		MessageBox(nullptr, _T("Failed to initialize COM security"), _T("ERROR"), MB_OK);
+		return hr;
+	}
+
+	//
+	// Spin up lxss manager (ILxssSession)
+	//
+	hr = CoCreateInstance(lxGuid,
+		NULL,
+		CLSCTX_LOCAL_SERVER,
+		lxSessionGuid,
+		(PVOID*)iLxSession);
+	if (!SUCCEEDED(hr))
+	{
+		MessageBox(nullptr, _T("Failed to initialize ILxssSession"), _T("ERROR"), MB_OK);
+		return hr;
+	}
+
+	//
+	// Start an instance (ILxssInstance).
+	// If one is running, we'll get a pointer to it.
+	//
+	hr = (**iLxSession)->StartDefaultInstance(*iLxSession,
+		lxInstanceGuid,
+		(PVOID*)iLxInstance);
+	if (!SUCCEEDED(hr))
+	{
+		MessageBox(nullptr, _T("Failed to start LX Instance -- check Developer mode?"), _T("ERROR"), MB_OK);
+		return hr;
+	}
+
+	return S_OK;
 }
 
 HANDLE LaunchBash() {

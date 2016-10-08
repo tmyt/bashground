@@ -14,6 +14,7 @@
 #include <strsafe.h>
 #include <Commctrl.h>
 #include <windowsx.h>
+#include <objbase.h>
 
 // C RunTime Header Files
 #include <stdlib.h>
