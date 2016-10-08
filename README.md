@@ -9,3 +9,16 @@ Bash on Windows process runs in backgroud.
 Bash on Windows で tmux 起動しててもbashのウィンドウがすべて終了した時点でLinuxサブシステムがシャットダウンしてしまう。つまりtmuxセッションが維持できなくてとても悲しい。
 
 そのために、見えないところでBashを起動してLinuxサブシステムがシャットダウンしないように維持するだけのプログラム。
+special thanks
+----
+
+Alex Ionescu - lxss (https://github.com/ionescu007/lxss)
+
+license
+----
+
+the software licensed under MIT license.
+
+the software includes these opensource software.
+
+- lxss (https://github.com/ionescu007/lxss)
