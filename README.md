@@ -1,14 +1,16 @@
 Bashground
 =====
 
-Bash on Windows process runs in backgroud.
+Bash on Windows processes keep in backgroud.
 
-背景
+motivation
 ----
 
-Bash on Windows で tmux 起動しててもbashのウィンドウがすべて終了した時点でLinuxサブシステムがシャットダウンしてしまう。つまりtmuxセッションが維持できなくてとても悲しい。
+One day, I start tmux session in Bash on Windows and Close terminal. "I loved tmux :)"
 
-そために、バックグラウンドでLinuxサブシステムを起動してそのままシャットダウンしないように維持するだけのプログラム。
+After a few minutes, I open new terminal and type command `tmux a` but tmux does not seen. Because Bash on Windows subsystem shutted down when all terminal closed.
+
+This program keeps Bash on Windows Subsystem in background!
 
 special thanks
 ----
